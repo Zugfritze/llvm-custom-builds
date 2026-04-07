@@ -28,7 +28,7 @@ jobs:
         shell: pwsh
         env:
           DWARFS_VERSION: 0.15.3
-          MKDWARFS_OPTIONS: --chmod=ugo=rx
+          MKDWARFS_OPTIONS: "--categorize binary --chmod=ugo=rx"
         run: |
           New-Item -Path "release" -Force -ItemType "directory"
           Invoke-WebRequest https://github.com/mhx/dwarfs/releases/download/v${{ env.DWARFS_VERSION }}/dwarfs-universal-${{ env.DWARFS_VERSION }}-Windows-AMD64.exe -Out .\dwarfs-universal.exe

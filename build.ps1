@@ -26,7 +26,7 @@ Set-Location build
 New-Item -Path "install" -Force -ItemType "directory"
 
 cmake `
-    -G "Ninja" `
+    -G Ninja `
     -DCMAKE_INSTALL_PREFIX=install `
     -DCMAKE_C_COMPILER="clang-cl.exe" `
     -DCMAKE_CXX_COMPILER="clang-cl.exe" `
