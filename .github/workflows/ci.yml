@@ -16,13 +16,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Download LLVM
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: 'llvm/llvm-project'
+          tag: 'llvmorg-22.1.3'
+          fileName: 'clang+llvm-22.1.3-x86_64-pc-windows-msvc.tar.xz'
+
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Build
         shell: pwsh
         run: |
-          ./build.ps1 "${{ env.llvm_repo_url }}" "${{ env.llvm_branch }}"
+          7z x clang+llvm-22.1.3-x86_64-pc-windows-msvc.tar.xz
+          7z x clang+llvm-22.1.3-x86_64-pc-windows-msvc.tar
+          $LLVM_BOOTSTRAP_PATH = "$pwd\clang+llvm-22.1.3-x86_64-pc-windows-msvc"
+          ./build.ps1 "${{ env.llvm_repo_url }}" "${{ env.llvm_branch }}" "$LLVM_BOOTSTRAP_PATH"
 
       - name: Zip
         shell: pwsh

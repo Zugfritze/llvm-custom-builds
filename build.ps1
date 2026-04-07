@@ -1,5 +1,6 @@
 $LLVM_REPO_URL = $args[0]
 $LLVM_BRANCH = $args[1]
+$LLVM_BOOTSTRAP_PATH = $args[2]
 
 if ([string]::IsNullOrEmpty($LLVM_REPO_URL)) {
     $LLVM_REPO_URL = "https://github.com/llvm/llvm-project.git"
@@ -7,6 +8,13 @@ if ([string]::IsNullOrEmpty($LLVM_REPO_URL)) {
 
 if ([string]::IsNullOrEmpty($LLVM_BRANCH)) {
     $LLVM_BRANCH = "main"
+}
+
+$C_COMPILER = "clang-cl.exe"
+$CXX_COMPILER = "clang-cl.exe"
+if (![string]::IsNullOrEmpty($LLVM_BOOTSTRAP_PATH)) {
+    $C_COMPILER = "$LLVM_BOOTSTRAP_PATH\bin\clang-cl.exe"
+    $CXX_COMPILER = "$LLVM_BOOTSTRAP_PATH\bin\clang-cl.exe"
 }
 
 if (-not (Test-Path -Path "llvm-project" -PathType Container)) {
@@ -28,8 +36,8 @@ New-Item -Path "install" -Force -ItemType "directory"
 cmake `
     -G Ninja `
     -DCMAKE_INSTALL_PREFIX=install `
-    -DCMAKE_C_COMPILER="clang-cl.exe" `
-    -DCMAKE_CXX_COMPILER="clang-cl.exe" `
+    -DCMAKE_C_COMPILER="$C_COMPILER" `
+    -DCMAKE_CXX_COMPILER="$CXX_COMPILER" `
     -DLLVM_USE_LINKER=lld `
     -DCMAKE_BUILD_TYPE=Release `
     -DLLVM_TARGETS_TO_BUILD=X86 `
