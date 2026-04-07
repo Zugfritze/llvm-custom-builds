@@ -43,6 +43,7 @@ cmake `
     -DLLVM_BUILD_LLVM_DYLIB=ON `
     -DLLVM_BUILD_LLVM_DYLIB_VIS=ON `
     -DLLVM_LINK_LLVM_DYLIB=ON `
+    -DLLVM_ENABLE_PLUGINS=ON `
     ../llvm
 
 cmake --build . --config Release
