@@ -41,7 +41,6 @@ cmake `
     -DLLVM_USE_LINKER=lld `
     -DCMAKE_BUILD_TYPE=Release `
     -DLLVM_TARGETS_TO_BUILD=X86 `
-    -DLLVM_ENABLE_LTO=Thin `
     -DLLVM_ENABLE_ZLIB=OFF `
     -DLLVM_ENABLE_LIBXML2=OFF `
     -DLLVM_INCLUDE_DOCS=OFF `
@@ -58,4 +57,4 @@ cmake `
     ../llvm
 
 cmake --build . --config Release
-cmake --install . --strip --config Release
+cmake --install . --config Release
