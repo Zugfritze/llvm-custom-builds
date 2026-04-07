@@ -6,6 +6,8 @@ jobs:
   build:
     name: Build
     runs-on: windows-2022
+    permissions:
+      contents: write
     env:
       llvm_repo_url: https://github.com/llvm/llvm-project.git
       llvm_branch: release/22.x
@@ -38,4 +40,3 @@ jobs:
           name: Release ${{ env.llvm_branch }}
           tag_name: ${{ env.llvm_branch }}
           files: release/*
-
