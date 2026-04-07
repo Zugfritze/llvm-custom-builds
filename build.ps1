@@ -17,6 +17,9 @@ Set-Location llvm-project
 git fetch origin
 git checkout "$LLVM_BRANCH"
 
+git apply ..\175764.patch
+git apply ..\176788.patch
+
 New-Item -Path "build" -Force -ItemType "directory"
 Set-Location build
 

@@ -1,0 +1,23 @@
+From c7150fa937147f9509e5f510cf4e617e3d55e7b9 Mon Sep 17 00:00:00 2001
+From: mcbarton <matthew.c.barton@hotmail.co.uk>
+Date: Tue, 13 Jan 2026 14:16:53 +0000
+Subject: [PATCH] Remove LLVM_ABI from symbolicate declaration in
+ BacktraceTools.h
+
+---
+ llvm/include/llvm/ExecutionEngine/Orc/BacktraceTools.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/llvm/include/llvm/ExecutionEngine/Orc/BacktraceTools.h b/llvm/include/llvm/ExecutionEngine/Orc/BacktraceTools.h
+index 454d7654b66bf..c9366aef4de00 100644
+--- a/llvm/include/llvm/ExecutionEngine/Orc/BacktraceTools.h
++++ b/llvm/include/llvm/ExecutionEngine/Orc/BacktraceTools.h
+@@ -78,7 +78,7 @@ class LLVM_ABI DumpedSymbolTable {
+ 
+   /// Given a backtrace, try to symbolicate any unsymbolicated lines using the
+   /// symbol addresses in the dumped symbol table.
+-  LLVM_ABI std::string symbolicate(StringRef Backtrace);
++  std::string symbolicate(StringRef Backtrace);
+ 
+ private:
+   DumpedSymbolTable(std::unique_ptr<MemoryBuffer> SymtabBuffer);
