@@ -41,6 +41,7 @@ cmake `
     -DLLVM_USE_LINKER=lld `
     -DCMAKE_BUILD_TYPE=Release `
     -DLLVM_TARGETS_TO_BUILD=X86 `
+    -DLLVM_ENABLE_PROJECTS="clang;lld;lldb"
     -DLLVM_ENABLE_ZLIB=OFF `
     -DLLVM_ENABLE_LIBXML2=OFF `
     -DLLVM_INCLUDE_DOCS=OFF `
@@ -54,6 +55,8 @@ cmake `
     -DLLVM_BUILD_LLVM_DYLIB_VIS=ON `
     -DLLVM_LINK_LLVM_DYLIB=ON `
     -DLLVM_ENABLE_PLUGINS=ON `
+    -DCLANG_LINK_CLANG_DYLIB=ON `
+    -DLLDB_ENABLE_LZMA=OFF `
     ../llvm
 
 cmake --build . --config Release
