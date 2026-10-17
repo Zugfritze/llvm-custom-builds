@@ -1,0 +1,209 @@
+From 099a5182ce57c60638a5f61a8b35fe1edc26ccde Mon Sep 17 00:00:00 2001
+From: Fabrice de Gans <fabrice@thebrowser.company>
+Date: Thu, 17 Sep 2026 11:57:29 +0200
+Subject: [PATCH 2/6] Add missing LLVM_ABI annotations
+
+The automatic LLVM_ABI annotations script has been broken since #208780.
+PR #223354 restores its functionality. In the meantime, some API
+annotations regressed. This PR aims to fix all of these regressions.
+
+This was applied by calling the updated ids-check-helper.py from #223354
+on the public LLVM headers on a macOS host and clang-formatting the
+results.
+---
+ llvm/include/llvm/CodeGen/Rematerializer.h       |  2 +-
+ llvm/include/llvm/DTLTO/DTLTO.h                  |  2 +-
+ .../DebugInfo/PDB/Native/PDBStringTableBuilder.h |  2 +-
+ llvm/include/llvm/ExecutionEngine/Orc/LLJIT.h    |  6 +++---
+ .../Orc/TargetProcess/LibraryScanner.h           |  4 ++--
+ llvm/include/llvm/MC/MCAsmStreamer.h             |  8 +++++---
+ llvm/include/llvm/Support/RWMutex.h              | 16 ++++++++--------
+ .../Orc/TargetProcess/OrcRTBootstrap.h           |  2 +-
+ 8 files changed, 22 insertions(+), 20 deletions(-)
+
+diff --git a/llvm/include/llvm/CodeGen/Rematerializer.h b/llvm/include/llvm/CodeGen/Rematerializer.h
+index 082989678883..4bcae6e171af 100644
+--- a/llvm/include/llvm/CodeGen/Rematerializer.h
++++ b/llvm/include/llvm/CodeGen/Rematerializer.h
+@@ -531,7 +531,7 @@ private:
+     /// previously deleted registers.
+     MachineInstr *DefMI;
+ 
+-    LLVM_ABI DeadReg(RegisterIdx Idx, const Rematerializer &Remater)
++    DeadReg(RegisterIdx Idx, const Rematerializer &Remater)
+         : Idx(Idx), DefReg(Remater.getReg(Idx).getDefReg()),
+           DefMI(Remater.getReg(Idx).DefMI) {}
+   };
+diff --git a/llvm/include/llvm/DTLTO/DTLTO.h b/llvm/include/llvm/DTLTO/DTLTO.h
+index 13b83ec6e077..71c0a2f44702 100644
+--- a/llvm/include/llvm/DTLTO/DTLTO.h
++++ b/llvm/include/llvm/DTLTO/DTLTO.h
+@@ -366,7 +366,7 @@ private:
+ 
+   // There can be many temporary files to remove. Performing deletion in the
+   // background can save a few seconds on Windows hosts.
+-  struct BackgroundDeletion : DefaultThreadPool {
++  struct LLVM_ABI BackgroundDeletion : DefaultThreadPool {
+     BackgroundDeletion();
+     ~BackgroundDeletion();
+ 
+diff --git a/llvm/include/llvm/DebugInfo/PDB/Native/PDBStringTableBuilder.h b/llvm/include/llvm/DebugInfo/PDB/Native/PDBStringTableBuilder.h
+index 8deb065c4ef7..873b74d8d1c6 100644
+--- a/llvm/include/llvm/DebugInfo/PDB/Native/PDBStringTableBuilder.h
++++ b/llvm/include/llvm/DebugInfo/PDB/Native/PDBStringTableBuilder.h
+@@ -35,7 +35,7 @@ class PDBStringTableBuilder;
+ struct StringTableHashTraits {
+   PDBStringTableBuilder *Table;
+ 
+-  LLVM_ABI StringTableHashTraits() = default;
++  StringTableHashTraits() = default;
+   LLVM_ABI explicit StringTableHashTraits(PDBStringTableBuilder &Table);
+   LLVM_ABI uint32_t hashLookupKey(StringRef S) const;
+   LLVM_ABI StringRef storageKeyToLookupKey(uint32_t Offset) const;
+diff --git a/llvm/include/llvm/ExecutionEngine/Orc/LLJIT.h b/llvm/include/llvm/ExecutionEngine/Orc/LLJIT.h
+index 62fe44d6bcba..b205e2db777d 100644
+--- a/llvm/include/llvm/ExecutionEngine/Orc/LLJIT.h
++++ b/llvm/include/llvm/ExecutionEngine/Orc/LLJIT.h
+@@ -286,7 +286,7 @@ protected:
+ 
+ /// An extended version of LLJIT that supports lazy function-at-a-time
+ /// compilation of LLVM IR.
+-class LLLazyJIT : public LLJIT {
++class LLVM_ABI LLLazyJIT : public LLJIT {
+   template <typename, typename, typename> friend class LLJITBuilderSetters;
+ 
+ public:
+@@ -296,13 +296,13 @@ public:
+     IPLayer->setPartitionFunction(std::move(Partition));
+   }
+ 
+-  LLVM_ABI ~LLLazyJIT();
++  ~LLLazyJIT();
+ 
+   /// Returns a reference to the on-demand layer.
+   CompileOnDemandLayer &getCompileOnDemandLayer() { return *CODLayer; }
+ 
+   /// Add a module to be lazily compiled to JITDylib JD.
+-  LLVM_ABI Error addLazyIRModule(JITDylib &JD, ThreadSafeModule M);
++  Error addLazyIRModule(JITDylib &JD, ThreadSafeModule M);
+ 
+   /// Add a module to be lazily compiled to the main JITDylib.
+   Error addLazyIRModule(ThreadSafeModule M) {
+diff --git a/llvm/include/llvm/ExecutionEngine/Orc/TargetProcess/LibraryScanner.h b/llvm/include/llvm/ExecutionEngine/Orc/TargetProcess/LibraryScanner.h
+index dff659944e38..5bc8ed7a14db 100644
+--- a/llvm/include/llvm/ExecutionEngine/Orc/TargetProcess/LibraryScanner.h
++++ b/llvm/include/llvm/ExecutionEngine/Orc/TargetProcess/LibraryScanner.h
+@@ -152,8 +152,8 @@ public:
+     return realpathCached(Path, ec);
+   }
+ #ifndef _WIN32
+-  mode_t lstatCached(StringRef Path);
+-  std::optional<std::string> readlinkCached(StringRef Path);
++  LLVM_ABI mode_t lstatCached(StringRef Path);
++  LLVM_ABI std::optional<std::string> readlinkCached(StringRef Path);
+ #endif
+   LLVM_ABI std::optional<std::string>
+   realpathCached(StringRef Path, std::error_code &ec, StringRef base = "",
+diff --git a/llvm/include/llvm/MC/MCAsmStreamer.h b/llvm/include/llvm/MC/MCAsmStreamer.h
+index 4780c7892bc1..e15929dc030f 100644
+--- a/llvm/include/llvm/MC/MCAsmStreamer.h
++++ b/llvm/include/llvm/MC/MCAsmStreamer.h
+@@ -38,8 +38,9 @@ protected:
+   raw_svector_ostream CommentStream;
+   raw_null_ostream NullStream;
+ 
+-  MCAsmBaseStreamer(MCContext &Context, std::unique_ptr<MCCodeEmitter> Emitter,
+-                    std::unique_ptr<MCAsmBackend> AsmBackend);
++  LLVM_ABI MCAsmBaseStreamer(MCContext &Context,
++                             std::unique_ptr<MCCodeEmitter> Emitter,
++                             std::unique_ptr<MCAsmBackend> AsmBackend);
+ 
+ public:
+   /// Return a raw_ostream that comments can be written to.
+@@ -54,7 +55,8 @@ public:
+   /// Add a comment showing the encoding of an instruction.
+   /// \param Inst - The instruction to encode.
+   /// \param STI - Subtarget information.
+-  void addEncodingComment(const MCInst &Inst, const MCSubtargetInfo &STI);
++  LLVM_ABI void addEncodingComment(const MCInst &Inst,
++                                   const MCSubtargetInfo &STI);
+ 
+   MCAssembler &getAssembler() { return *Assembler; }
+ };
+diff --git a/llvm/include/llvm/Support/RWMutex.h b/llvm/include/llvm/Support/RWMutex.h
+index efc1ca19a120..67079d615bd9 100644
+--- a/llvm/include/llvm/Support/RWMutex.h
++++ b/llvm/include/llvm/Support/RWMutex.h
+@@ -34,7 +34,7 @@ class RWMutexImpl {
+ public:
+   /// Initializes the lock but doesn't acquire it.
+   /// Default Constructor.
+-  explicit RWMutexImpl();
++  LLVM_ABI explicit RWMutexImpl();
+ 
+   /// @}
+   /// @name Do Not Implement
+@@ -45,7 +45,7 @@ public:
+ 
+   /// Releases and removes the lock
+   /// Destructor
+-  ~RWMutexImpl();
++  LLVM_ABI ~RWMutexImpl();
+ 
+   /// @}
+   /// @name Methods
+@@ -56,32 +56,32 @@ public:
+   /// the lock.
+   /// @returns false if any kind of error occurs, true otherwise.
+   /// Unconditionally acquire the lock in reader mode.
+-  bool lock_shared();
++  LLVM_ABI bool lock_shared();
+ 
+   /// Attempts to release the lock in reader mode.
+   /// @returns false if any kind of error occurs, true otherwise.
+   /// Unconditionally release the lock in reader mode.
+-  bool unlock_shared();
++  LLVM_ABI bool unlock_shared();
+ 
+   /// Attempts to acquire the lock in reader mode. Returns immediately.
+   /// @returns true on successful lock acquisition, false otherwise.
+-  bool try_lock_shared();
++  LLVM_ABI bool try_lock_shared();
+ 
+   /// Attempts to unconditionally acquire the lock in reader mode. If the
+   /// lock is held by any readers, this method will wait until it can
+   /// acquire the lock.
+   /// @returns false if any kind of error occurs, true otherwise.
+   /// Unconditionally acquire the lock in writer mode.
+-  bool lock();
++  LLVM_ABI bool lock();
+ 
+   /// Attempts to release the lock in writer mode.
+   /// @returns false if any kind of error occurs, true otherwise.
+   /// Unconditionally release the lock in write mode.
+-  bool unlock();
++  LLVM_ABI bool unlock();
+ 
+   /// Attempts to acquire the lock in writer mode. Returns immediately.
+   /// @returns true on successful lock acquisition, false otherwise.
+-  bool try_lock();
++  LLVM_ABI bool try_lock();
+ 
+   //@}
+   /// @name Platform Dependent Data
+diff --git a/llvm/lib/ExecutionEngine/Orc/TargetProcess/OrcRTBootstrap.h b/llvm/lib/ExecutionEngine/Orc/TargetProcess/OrcRTBootstrap.h
+index 92b513d0bb53..72f0664f9a2c 100644
+--- a/llvm/lib/ExecutionEngine/Orc/TargetProcess/OrcRTBootstrap.h
++++ b/llvm/lib/ExecutionEngine/Orc/TargetProcess/OrcRTBootstrap.h
+@@ -27,7 +27,7 @@ namespace llvm {
+ namespace orc {
+ namespace rt_bootstrap {
+ 
+-void addTo(StringMap<ExecutorAddr> &M);
++LLVM_ABI void addTo(StringMap<ExecutorAddr> &M);
+ 
+ } // namespace rt_bootstrap
+ } // end namespace orc
+-- 
+2.55.0
+

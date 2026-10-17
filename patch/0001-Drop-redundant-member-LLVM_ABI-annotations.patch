@@ -1,0 +1,85 @@
+From 9a95e186147a9703d453a0f512496493737cd086 Mon Sep 17 00:00:00 2001
+From: Fabrice de Gans <fabrice@thebrowser.company>
+Date: Thu, 25 Jun 2026 11:45:35 +0200
+Subject: [PATCH 1/6] Drop redundant member LLVM_ABI annotations
+
+Classes that are annotated with LLVM_ABI[_FOR_TEST] should not have
+individual member annotations. This PR drops the redundant member
+annotations.
+---
+ llvm/lib/Transforms/Vectorize/VPlan.h | 28 +++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/llvm/lib/Transforms/Vectorize/VPlan.h b/llvm/lib/Transforms/Vectorize/VPlan.h
+index 76bfa8bf6192..703b45cc2a27 100644
+--- a/llvm/lib/Transforms/Vectorize/VPlan.h
++++ b/llvm/lib/Transforms/Vectorize/VPlan.h
+@@ -3848,11 +3848,11 @@ struct LLVM_ABI_FOR_TEST VPWidenLoadEVLRecipe final
+   VPValue *getEVL() const { return getOperand(1); }
+ 
+   /// Generate the wide load or gather.
+-  LLVM_ABI_FOR_TEST void execute(VPTransformState &State) override;
++  void execute(VPTransformState &State) override;
+ 
+   /// Return the cost of this VPWidenLoadEVLRecipe.
+-  LLVM_ABI_FOR_TEST InstructionCost
+-  computeCost(ElementCount VF, VPCostContext &Ctx) const override;
++  InstructionCost computeCost(ElementCount VF,
++                              VPCostContext &Ctx) const override;
+ 
+   /// Returns true if the recipe only uses the first lane of operand \p Op.
+   bool usesFirstLaneOnly(const VPValue *Op) const override {
+@@ -3864,13 +3864,13 @@ struct LLVM_ABI_FOR_TEST VPWidenLoadEVLRecipe final
+   }
+ 
+ protected:
+-  LLVM_ABI_FOR_TEST VPRecipeBase *getAsRecipe() override;
+-  LLVM_ABI_FOR_TEST const VPRecipeBase *getAsRecipe() const override;
++  VPRecipeBase *getAsRecipe() override;
++  const VPRecipeBase *getAsRecipe() const override;
+ 
+ #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+   /// Print the recipe.
+-  LLVM_ABI_FOR_TEST void printRecipe(raw_ostream &O, const Twine &Indent,
+-                                     VPSlotTracker &SlotTracker) const override;
++  void printRecipe(raw_ostream &O, const Twine &Indent,
++                   VPSlotTracker &SlotTracker) const override;
+ #endif
+ };
+ 
+@@ -3953,11 +3953,11 @@ struct LLVM_ABI_FOR_TEST VPWidenStoreEVLRecipe final
+   VPValue *getEVL() const { return getOperand(2); }
+ 
+   /// Generate the wide store or scatter.
+-  LLVM_ABI_FOR_TEST void execute(VPTransformState &State) override;
++  void execute(VPTransformState &State) override;
+ 
+   /// Return the cost of this VPWidenStoreEVLRecipe.
+-  LLVM_ABI_FOR_TEST InstructionCost
+-  computeCost(ElementCount VF, VPCostContext &Ctx) const override;
++  InstructionCost computeCost(ElementCount VF,
++                              VPCostContext &Ctx) const override;
+ 
+   /// Returns true if the recipe only uses the first lane of operand \p Op.
+   bool usesFirstLaneOnly(const VPValue *Op) const override {
+@@ -3974,13 +3974,13 @@ struct LLVM_ABI_FOR_TEST VPWidenStoreEVLRecipe final
+   }
+ 
+ protected:
+-  LLVM_ABI_FOR_TEST VPRecipeBase *getAsRecipe() override;
+-  LLVM_ABI_FOR_TEST const VPRecipeBase *getAsRecipe() const override;
++  VPRecipeBase *getAsRecipe() override;
++  const VPRecipeBase *getAsRecipe() const override;
+ 
+ #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+   /// Print the recipe.
+-  LLVM_ABI_FOR_TEST void printRecipe(raw_ostream &O, const Twine &Indent,
+-                                     VPSlotTracker &SlotTracker) const override;
++  void printRecipe(raw_ostream &O, const Twine &Indent,
++                   VPSlotTracker &SlotTracker) const override;
+ #endif
+ };
+ 
+-- 
+2.55.0
+

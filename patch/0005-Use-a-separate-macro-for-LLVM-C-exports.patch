@@ -1,0 +1,96 @@
+From a1578bafa4ec4ddb058d84727d016dbcce0ca335 Mon Sep 17 00:00:00 2001
+From: Fabrice de Gans <steelskin@gmail.com>
+Date: Thu, 8 Oct 2026 14:12:40 +0200
+Subject: [PATCH 5/6] Use a separate macro for LLVM C exports
+
+Previously, the LLVM C library reused the `LLVM_EXPORTS` macro to
+define the `dllexport` annotation. While this caused no problem with the
+resulting build, this caused warnings when building the definitions of
+the LLVM C library exports.
+
+This fixes the issue by having a separate macro, `LLVM_C_EXPORTS` for
+these exports.
+
+This has no effect outside of the Windows dylib build.
+
+The effort to build LLVM as a dylib is tracked in #109483.
+---
+ llvm/cmake/modules/AddLLVM.cmake        | 2 +-
+ llvm/include/llvm-c/Visibility.h        | 2 +-
+ llvm/lib/Support/BLAKE3/CMakeLists.txt  | 4 ++--
+ llvm/tools/lto/CMakeLists.txt           | 4 ++++
+ llvm/tools/remarks-shlib/CMakeLists.txt | 3 +++
+ 5 files changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/llvm/cmake/modules/AddLLVM.cmake b/llvm/cmake/modules/AddLLVM.cmake
+index a267166eb6c2..c87991aadc08 100644
+--- a/llvm/cmake/modules/AddLLVM.cmake
++++ b/llvm/cmake/modules/AddLLVM.cmake
+@@ -748,7 +748,7 @@ function(llvm_add_library name)
+   if(ARG_COMPONENT_LIB)
+     set_target_properties(${name} PROPERTIES LLVM_COMPONENT TRUE)
+     if(LLVM_BUILD_LLVM_DYLIB OR BUILD_SHARED_LIBS)
+-      target_compile_definitions(${name} PRIVATE LLVM_EXPORTS)
++      target_compile_definitions(${name} PRIVATE LLVM_EXPORTS LLVM_C_EXPORTS)
+     endif()
+ 
+     # When building shared objects for each target there are some internal APIs
+diff --git a/llvm/include/llvm-c/Visibility.h b/llvm/include/llvm-c/Visibility.h
+index 371b981b6d32..aad37ae05b4d 100644
+--- a/llvm/include/llvm-c/Visibility.h
++++ b/llvm/include/llvm-c/Visibility.h
+@@ -27,7 +27,7 @@
+ #if defined(LLVM_ENABLE_LLVM_C_EXPORT_ANNOTATIONS) &&                          \
+     !defined(LLVM_BUILD_STATIC)
+ #if defined(_WIN32) && !defined(__MINGW32__)
+-#if defined(LLVM_EXPORTS)
++#if defined(LLVM_C_EXPORTS)
+ #define LLVM_C_ABI __declspec(dllexport)
+ #else
+ #define LLVM_C_ABI __declspec(dllimport)
+diff --git a/llvm/lib/Support/BLAKE3/CMakeLists.txt b/llvm/lib/Support/BLAKE3/CMakeLists.txt
+index 90311ae24721..ff907c43615a 100644
+--- a/llvm/lib/Support/BLAKE3/CMakeLists.txt
++++ b/llvm/lib/Support/BLAKE3/CMakeLists.txt
+@@ -88,7 +88,7 @@ set_target_properties(LLVMSupportBlake3 PROPERTIES FOLDER "LLVM/Libraries")
+ llvm_update_compile_flags(LLVMSupportBlake3)
+ if(LLVM_BUILD_LLVM_DYLIB OR BUILD_SHARED_LIBS)
+   # Since LLVMSupportBlake3 is not defined using llvm_add_library(), we must
+-  # define LLVM_EXPORTS here so its public interface is annotated with
++  # define LLVM_C_EXPORTS here so its public interface is annotated with
+   # __declspec(dllexport) when building as a DLL on Windows.
+-  target_compile_definitions(LLVMSupportBlake3 PRIVATE LLVM_EXPORTS)
++  target_compile_definitions(LLVMSupportBlake3 PRIVATE LLVM_C_EXPORTS)
+ endif()
+diff --git a/llvm/tools/lto/CMakeLists.txt b/llvm/tools/lto/CMakeLists.txt
+index 5d13bf5e1e80..992b4d0012a2 100644
+--- a/llvm/tools/lto/CMakeLists.txt
++++ b/llvm/tools/lto/CMakeLists.txt
+@@ -36,6 +36,10 @@ if(LLVM_ENABLE_PIC)
+   add_llvm_library(${LTO_LIBRARY_NAME} ${LTO_LIBRARY_TYPE} INSTALL_WITH_TOOLCHAIN
+       ${SOURCES} DEPENDS intrinsics_gen)
+ 
++  # libLTO defines the lto_* C API but consumes the LLVM C++ API. Export the
++  # former without marking the latter as exported.
++  target_compile_definitions(${LTO_LIBRARY_NAME} PRIVATE LLVM_C_EXPORTS)
++
+   install(FILES ${LLVM_MAIN_INCLUDE_DIR}/llvm-c/lto.h
+     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/llvm-c"
+     COMPONENT LTO)
+diff --git a/llvm/tools/remarks-shlib/CMakeLists.txt b/llvm/tools/remarks-shlib/CMakeLists.txt
+index 1b14827e68cd..db1c91b11682 100644
+--- a/llvm/tools/remarks-shlib/CMakeLists.txt
++++ b/llvm/tools/remarks-shlib/CMakeLists.txt
+@@ -15,6 +15,9 @@ if(LLVM_ENABLE_PIC)
+ 
+   add_llvm_library(Remarks SHARED INSTALL_WITH_TOOLCHAIN ${SOURCES})
+ 
++  # libRemarks defines LLVMRemarkVersion() from the LLVM C API.
++  target_compile_definitions(Remarks PRIVATE LLVM_C_EXPORTS)
++
+   if (LLVM_INTEGRATED_CRT_ALLOC AND MSVC)
+     # Make sure we search LLVMSupport first, before the CRT libs
+     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -INCLUDE:malloc")
+-- 
+2.55.0
+

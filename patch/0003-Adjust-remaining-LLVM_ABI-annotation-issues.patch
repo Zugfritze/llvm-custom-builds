@@ -1,0 +1,119 @@
+From 8cf58e80eca47301be616b86e95922aca92dfed6 Mon Sep 17 00:00:00 2001
+From: Fabrice de Gans <steelskin@gmail.com>
+Date: Fri, 18 Sep 2026 14:18:53 +0200
+Subject: [PATCH 3/6] Adjust remaining LLVM_ABI annotation issues
+
+Following up from #224293. Some annotations cannot be automatically
+adjusted by the ids-check-helper and idt:
+* Only headers under llvm/include are parsed. Source files and internal
+  headers are not.
+* Headers are parsed in release mode, so debug-only declarations are
+  invisible.
+* idt ignores private declarations.
+
+These were found while performing a dylib build on Windows.
+
+The effort to build LLVM as a dylib is tracked in #109483.
+---
+ llvm/include/llvm/DTLTO/DTLTO.h                               | 2 +-
+ .../llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h        | 2 +-
+ llvm/include/llvm/ExecutionEngine/Orc/LLJIT.h                 | 2 +-
+ llvm/include/llvm/SandboxIR/Region.h                          | 4 ++--
+ llvm/include/llvm/Support/SMTAPI.h                            | 2 +-
+ llvm/lib/Transforms/Vectorize/VPlan.h                         | 4 ++--
+ 6 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/llvm/include/llvm/DTLTO/DTLTO.h b/llvm/include/llvm/DTLTO/DTLTO.h
+index 71c0a2f44702..9213a84ff57e 100644
+--- a/llvm/include/llvm/DTLTO/DTLTO.h
++++ b/llvm/include/llvm/DTLTO/DTLTO.h
+@@ -113,7 +113,7 @@ private:
+   /// but before optimization begins. Existing files are overwritten because
+   /// they are likely leftovers from a previously terminated linker process and
+   /// can be safely replaced.
+-  LLVM_ABI Error extractLTOInputs();
++  Error extractLTOInputs();
+ 
+   // Remove temporary files created to enable distribution.
+   void cleanup() override;
+diff --git a/llvm/include/llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h b/llvm/include/llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h
+index d7e666beff6a..08a17dbee813 100644
+--- a/llvm/include/llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h
++++ b/llvm/include/llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h
+@@ -160,7 +160,7 @@ public:
+   JITTargetMachineBuilderPrinter(JITTargetMachineBuilder &JTMB,
+                                  StringRef Indent)
+       : JTMB(JTMB), Indent(Indent) {}
+-  void print(raw_ostream &OS) const;
++  LLVM_ABI void print(raw_ostream &OS) const;
+ 
+   friend raw_ostream &operator<<(raw_ostream &OS,
+                                  const JITTargetMachineBuilderPrinter &JTMBP) {
+diff --git a/llvm/include/llvm/ExecutionEngine/Orc/LLJIT.h b/llvm/include/llvm/ExecutionEngine/Orc/LLJIT.h
+index b205e2db777d..1d784f9c8d3b 100644
+--- a/llvm/include/llvm/ExecutionEngine/Orc/LLJIT.h
++++ b/llvm/include/llvm/ExecutionEngine/Orc/LLJIT.h
+@@ -312,7 +312,7 @@ public:
+ private:
+ 
+   // Create a single-threaded LLLazyJIT instance.
+-  LLVM_ABI LLLazyJIT(LLLazyJITBuilderState &S, Error &Err);
++  LLLazyJIT(LLLazyJITBuilderState &S, Error &Err);
+ 
+   std::unique_ptr<LazyCallThroughManager> LCTMgr;
+   std::unique_ptr<IRPartitionLayer> IPLayer;
+diff --git a/llvm/include/llvm/SandboxIR/Region.h b/llvm/include/llvm/SandboxIR/Region.h
+index a8c7d80a5294..25f5d8d587d7 100644
+--- a/llvm/include/llvm/SandboxIR/Region.h
++++ b/llvm/include/llvm/SandboxIR/Region.h
+@@ -189,10 +189,10 @@ public:
+ 
+ #ifndef NDEBUG
+   /// This is an expensive check, meant for testing.
+-  LLVM_ABI bool operator==(const Region &Other) const;
++  bool operator==(const Region &Other) const;
+   bool operator!=(const Region &other) const { return !(*this == other); }
+ 
+-  LLVM_ABI void dump(raw_ostream &OS) const;
++  void dump(raw_ostream &OS) const;
+   void dump() const;
+   friend raw_ostream &operator<<(raw_ostream &OS, const Region &Rgn) {
+     Rgn.dump(OS);
+diff --git a/llvm/include/llvm/Support/SMTAPI.h b/llvm/include/llvm/Support/SMTAPI.h
+index aed6241219c3..1149ad89a16d 100644
+--- a/llvm/include/llvm/Support/SMTAPI.h
++++ b/llvm/include/llvm/Support/SMTAPI.h
+@@ -159,7 +159,7 @@ public:
+   virtual ~SMTSolver() = default;
+ 
+ #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+-  LLVM_DUMP_METHOD void dump() const;
++  LLVM_ABI LLVM_DUMP_METHOD void dump() const;
+ #endif
+ 
+   // Returns an appropriate floating-point sort for the given bitwidth.
+diff --git a/llvm/lib/Transforms/Vectorize/VPlan.h b/llvm/lib/Transforms/Vectorize/VPlan.h
+index 703b45cc2a27..daf6a8f25953 100644
+--- a/llvm/lib/Transforms/Vectorize/VPlan.h
++++ b/llvm/lib/Transforms/Vectorize/VPlan.h
+@@ -554,7 +554,7 @@ public:
+ 
+ #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+   /// Dump the recipe to stderr (for debugging).
+-  LLVM_ABI_FOR_TEST void dump() const;
++  void dump() const;
+ 
+   /// Print the recipe, delegating to printRecipe().
+   void print(raw_ostream &O, const Twine &Indent,
+@@ -684,7 +684,7 @@ public:
+ 
+ #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+   /// Print this VPSingleDefRecipe to dbgs() (for debugging).
+-  LLVM_ABI_FOR_TEST LLVM_DUMP_METHOD void dump() const;
++  LLVM_DUMP_METHOD void dump() const;
+ #endif
+ };
+ 
+-- 
+2.55.0
+

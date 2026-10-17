@@ -1,5 +1,10 @@
+$ErrorActionPreference = "Stop"
+$PSNativeCommandUseErrorActionPreference = $true
+
 clang-cl --version
 lld-link --version
+
+git -C llvm apply @(Get-ChildItem "patch/*.patch" -File | Sort-Object Name | ForEach-Object { $_.FullName })
 
 cmake -S llvm/llvm -B build -G Ninja `
     -DCMAKE_BUILD_TYPE=Release `
@@ -22,6 +27,7 @@ cmake -S llvm/llvm -B build -G Ninja `
     -DLLVM_BUILD_LLVM_DYLIB=ON `
     -DLLVM_BUILD_LLVM_DYLIB_VIS=ON `
     -DLLVM_LINK_LLVM_DYLIB=ON `
-    -DLLVM_BUILD_LLVM_C_DYLIB=ON
+    -DLLVM_BUILD_LLVM_C_DYLIB=ON `
+    -DLLVM_ENABLE_PLUGINS=ON
 
 ninja -C build install

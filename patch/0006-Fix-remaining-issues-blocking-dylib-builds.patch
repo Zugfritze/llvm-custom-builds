@@ -1,0 +1,24 @@
+From 7a73596239c8a8d2dfaf523bd2650fb1f40e3d77 Mon Sep 17 00:00:00 2001
+From: Zugfritze <70323844+Zugfritze@users.noreply.github.com>
+Date: Sun, 18 Oct 2026 06:02:59 +0000
+Subject: [PATCH 6/6] Fix remaining issues blocking dylib builds
+
+---
+ llvm/include/llvm/Transforms/IPO/Instrumentor.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/llvm/include/llvm/Transforms/IPO/Instrumentor.h b/llvm/include/llvm/Transforms/IPO/Instrumentor.h
+index fceb9e58b979..d0acae8df615 100644
+--- a/llvm/include/llvm/Transforms/IPO/Instrumentor.h
++++ b/llvm/include/llvm/Transforms/IPO/Instrumentor.h
+@@ -31,6 +31,7 @@
+ #include "llvm/Support/Allocator.h"
+ #include "llvm/Support/ErrorHandling.h"
+ #include "llvm/Support/StringSaver.h"
++#include "llvm/Support/VirtualFileSystem.h"
+ #include "llvm/Transforms/IPO/InstrumentorUtils.h"
+ #include "llvm/Transforms/Utils/Instrumentation.h"
+ 
+-- 
+2.55.0
+

@@ -1,0 +1,38 @@
+From 7e5bf91970ffed8139f07cf6e9b3a39bd268e8d1 Mon Sep 17 00:00:00 2001
+From: Fabrice de Gans <steelskin@gmail.com>
+Date: Wed, 7 Oct 2026 17:05:44 +0200
+Subject: [PATCH 4/6] Always export `llvmGetPassPluginInfo()`
+
+The function is always meant to be exported and is never imported
+"directly" via implicit linking. Instead, this is always done via
+`dlsym` / `GetProcAddress`.
+
+In order for the symbol to be properly exported from a plugin dylib, it
+must be defined as `__declspec(dllexport)` on Windows. In general,
+plugin symbol declaration must be declared with `LLVM_ABI_EXPORT`, as
+the documentation for that macro indicates.
+
+The effort to build LLVM as a dylib is tracked in #109483.
+---
+ llvm/include/llvm/Plugins/PassPlugin.h | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/llvm/include/llvm/Plugins/PassPlugin.h b/llvm/include/llvm/Plugins/PassPlugin.h
+index e8da9c51c0a8..fa79c4d78aa3 100644
+--- a/llvm/include/llvm/Plugins/PassPlugin.h
++++ b/llvm/include/llvm/Plugins/PassPlugin.h
+@@ -133,9 +133,8 @@ private:
+ ///   };
+ /// }
+ /// ```
+-extern "C" LLVM_ABI_NOT_EXPORTED ::llvm::PassPluginLibraryInfo
+-    LLVM_ATTRIBUTE_WEAK
+-    llvmGetPassPluginInfo();
++extern "C" LLVM_ABI_EXPORT ::llvm::PassPluginLibraryInfo LLVM_ATTRIBUTE_WEAK
++llvmGetPassPluginInfo();
+ #ifdef __clang__
+ #pragma clang diagnostic pop
+ #endif
+-- 
+2.55.0
+
