@@ -11,6 +11,8 @@ cmake -S llvm/llvm -B build -G Ninja `
     -DCMAKE_INSTALL_PREFIX="$PWD/install" `
     -DCMAKE_C_COMPILER=clang-cl.exe `
     -DCMAKE_CXX_COMPILER=clang-cl.exe `
+    -DCMAKE_C_COMPILER_LAUNCHER="$env:SCCACHE_PATH" `
+    -DCMAKE_CXX_COMPILER_LAUNCHER="$env:SCCACHE_PATH" `
     -DCMAKE_LINKER=lld-link.exe `
     -DLLVM_ENABLE_LLD=ON `
     -DCMAKE_C_FLAGS="-fuse-ld=lld" `
